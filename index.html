@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3D Machine Learning & Point Cloud Deep Learning — Technical Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #07080c;
+    --bg-1: #0b0d14;
+    --bg-2: #11141d;
+    --bg-3: #171b27;
+    --surface: rgba(23, 27, 39, 0.55);
+    --surface-hi: rgba(34, 40, 58, 0.75);
+    --border: rgba(255, 255, 255, 0.07);
+    --border-hi: rgba(255, 255, 255, 0.14);
+    --text: #e6e8ef;
+    --text-muted: #9aa1b2;
+    --text-dim: #6b7287;
+    --accent: #7c5cff;
+    --accent-2: #2ed3ff;
+    --accent-3: #ff5cae;
+    --accent-4: #4ade80;
+    --glow: 0 0 40px rgba(124, 92, 255, 0.25);
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-0);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    font-size: 15px;
+  }
+
+  /* Animated background orbs */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(1000px 700px at 85% -10%, rgba(124, 92, 255, 0.18), transparent 60%),
+      radial-gradient(900px 600px at 0% 100%, rgba(46, 211, 255, 0.12), transparent 60%),
+      radial-gradient(700px 500px at 50% 50%, rgba(255, 92, 174, 0.06), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    background: linear-gradient(180deg, rgba(11,13,20,0.95), rgba(7,8,12,0.95));
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .brand {
+    padding: 22px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-logo {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: conic-gradient(from 180deg at 50% 50%, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    position: relative;
+    box-shadow: var(--glow);
+    flex-shrink: 0;
+  }
+  .brand-logo::after{
+    content:"";
+    position:absolute; inset:2px;
+    background: var(--bg-1);
+    border-radius: 8px;
+    background-image: radial-gradient(circle at 50% 50%, var(--accent) 1.5px, transparent 2px),
+                      radial-gradient(circle at 25% 40%, var(--accent-2) 1px, transparent 1.5px),
+                      radial-gradient(circle at 75% 65%, var(--accent-3) 1px, transparent 1.5px),
+                      radial-gradient(circle at 40% 75%, var(--accent-4) 1px, transparent 1.5px);
+  }
+  .brand-title { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+  .brand-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .search {
+    padding: 14px 16px 6px;
+  }
+  .search input {
+    width: 100%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.25s;
+  }
+  .search input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.15);
+  }
+
+  .nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #2a2f40 transparent;
+  }
+  .nav::-webkit-scrollbar { width: 6px; }
+  .nav::-webkit-scrollbar-thumb { background: #2a2f40; border-radius: 3px; }
+
+  .nav-group {
+    margin-top: 14px;
+  }
+  .nav-group-title {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 6px 14px;
+    font-weight: 600;
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 8px;
+    position: relative;
+    transition: all 0.2s;
+    margin: 1px 0;
+  }
+  .nav-link:hover {
+    background: rgba(124, 92, 255, 0.08);
+    color: var(--text);
+  }
+  .nav-link.active {
+    background: linear-gradient(90deg, rgba(124, 92, 255, 0.18), rgba(46, 211, 255, 0.05));
+    color: #fff;
+    font-weight: 500;
+  }
+  .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: 8px; bottom: 8px;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+  }
+  .nav-icon {
+    width: 18px; height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+  .nav-sub { padding-left: 38px; font-size: 12.5px; color: var(--text-dim); padding-top: 7px; padding-bottom: 7px; }
+  .nav-sub:hover { color: var(--text); }
+
+  .sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-footer .pill {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #07080c;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ============ MAIN CONTENT ============ */
+  .main {
+    padding: 40px 56px 80px;
+    max-width: 1100px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .breadcrumb b { color: var(--accent-2); font-weight: 700; }
+  .top-actions { display: flex; gap: 8px; }
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn:hover { border-color: var(--border-hi); color: var(--text); transform: translateY(-1px); }
+
+  /* ============ HERO ============ */
+  .hero {
+    position: relative;
+    padding: 48px 44px;
+    border-radius: 22px;
+    background:
+      radial-gradient(600px 300px at 90% 10%, rgba(124, 92, 255, 0.35), transparent 65%),
+      radial-gradient(500px 300px at 10% 90%, rgba(46, 211, 255, 0.22), transparent 65%),
+      linear-gradient(135deg, #0e1220, #0a0c14);
+    border: 1px solid var(--border-hi);
+    overflow: hidden;
+    margin-bottom: 40px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(46, 211, 255, 0.7) 1px, transparent 2px),
+      radial-gradient(circle at 70% 50%, rgba(124, 92, 255, 0.7) 1px, transparent 2px),
+      radial-gradient(circle at 50% 80%, rgba(255, 92, 174, 0.6) 1px, transparent 2px),
+      radial-gradient(circle at 85% 20%, rgba(74, 222, 128, 0.5) 1px, transparent 2px),
+      radial-gradient(circle at 15% 70%, rgba(46, 211, 255, 0.5) 1px, transparent 2px);
+    background-size: 150px 150px, 220px 220px, 180px 180px, 250px 250px, 200px 200px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 92, 255, 0.35);
+    background: rgba(124, 92, 255, 0.08);
+    color: #c3b8ff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: #7c5cff; box-shadow: 0 0 8px #7c5cff; }
+  .hero h1 {
+    font-size: 44px;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #ffffff, #a9b0c3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 18px;
+  }
+  .hero h1 span {
+    background: linear-gradient(90deg, #7c5cff, #2ed3ff, #ff5cae);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 720px;
+    margin-bottom: 26px;
+  }
+  .hero-meta { display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); }
+  .hero-meta span b { color: var(--text); }
+
+  /* ============ SECTION ============ */
+  section.chapter {
+    padding-top: 56px;
+    scroll-margin-top: 20px;
+  }
+  .chapter-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .chapter-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent-2);
+    background: rgba(46, 211, 255, 0.08);
+    border: 1px solid rgba(46, 211, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+  .chapter h2 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .chapter-intro {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 28px;
+    max-width: 820px;
+  }
+
+  h3 {
+    font-size: 19px;
+    font-weight: 600;
+    color: #fff;
+    margin: 34px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h3::before {
+    content: "";
+    width: 4px; height: 18px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+  }
+  h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent-2);
+    margin: 22px 0 8px;
+    letter-spacing: 0.01em;
+  }
+
+  p { color: #c5cad8; margin-bottom: 14px; }
+  p + p { margin-top: 0; }
+  strong { color: #fff; font-weight: 600; }
+
+  /* ============ CARDS ============ */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin: 16px 0;
+    backdrop-filter: blur(10px);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: var(--border-hi); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+  }
+  .mini-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+  }
+  .mini-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(124, 92, 255, 0.35);
+    box-shadow: 0 10px 30px rgba(124, 92, 255, 0.12);
+  }
+  .mini-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .mini-card:hover::before { opacity: 1; }
+  .mini-card .mc-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .mini-card .mc-desc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .mini-card .mc-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(124, 92, 255, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  /* ============ TABLES ============ */
+  .table-wrap {
+    margin: 20px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  thead th {
+    background: rgba(124, 92, 255, 0.08);
+    color: #fff;
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-hi);
+  }
+  tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td:first-child { color: #fff; font-weight: 500; }
+
+  /* ============ CALLOUTS ============ */
+  .callout {
+    border-left: 3px solid var(--accent-2);
+    background: rgba(46, 211, 255, 0.05);
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin: 14px 0;
+    font-size: 14px;
+    color: #c5cad8;
+  }
+  .callout.warn {
+    border-color: #ff9d5c;
+    background: rgba(255, 157, 92, 0.06);
+  }
+  .callout.tip {
+    border-color: var(--accent-4);
+    background: rgba(74, 222, 128, 0.05);
+  }
+  .callout-title {
+    font-weight: 600;
+    color: #fff;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ============ BADGES / CODE ============ */
+  code, .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: rgba(124, 92, 255, 0.1);
+    color: #c3b8ff;
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(124, 92, 255, 0.18);
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-right: 6px;
+  }
+  .badge.year { background: rgba(46, 211, 255, 0.12); color: var(--accent-2); }
+  .badge.sota { background: linear-gradient(135deg, var(--accent), var(--accent-3)); color: #fff; }
+  .badge.new { background: rgba(74, 222, 128, 0.12); color: var(--accent-4); }
+
+  /* ============ ARCHITECTURE FLOW ============ */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 18px 0;
+  }
+  .flow-step {
+    background: linear-gradient(135deg, rgba(124, 92, 255, 0.12), rgba(46, 211, 255, 0.08));
+    border: 1px solid rgba(124, 92, 255, 0.3);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #fff;
+  }
+  .flow-arrow { color: var(--text-dim); font-size: 16px; }
+
+  ul.clean { list-style: none; }
+  ul.clean li {
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 8px;
+    color: #c5cad8;
+    font-size: 14px;
+  }
+  ul.clean li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 10px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+
+  /* ============ FOOTER ============ */
+  footer.page-footer {
+    margin-top: 80px;
+    padding: 40px 0 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .author-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px;
+    margin: 20px 0;
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .author-avatar {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: conic-gradient(from 45deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    font-size: 24px;
+    position: relative;
+  }
+  .author-avatar::after {
+    content: "NF";
+    position: absolute;
+    inset: 3px;
+    background: var(--bg-2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .author-name { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .author-role { color: var(--accent-2); font-size: 13px; margin-bottom: 10px; }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: fixed; left: -300px; top: 0; z-index: 20; transition: left 0.3s; width: 280px; }
+    .sidebar.open { left: 0; }
+    .main { padding: 24px; }
+    .hero h1 { font-size: 32px; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+
+  /* Icon line art */
+  .ic { stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ============ FIGURES / IMAGES ============ */
+  .figure {
+    margin: 22px 0;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2));
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.35s, border-color 0.35s, box-shadow 0.35s;
+  }
+  .figure:hover {
+    transform: translateY(-3px);
+    border-color: rgba(124, 92, 255, 0.35);
+    box-shadow: 0 20px 50px rgba(124, 92, 255, 0.15);
+  }
+  .figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: brightness(1.02) contrast(1.03);
+  }
+  .figure figcaption {
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    background: rgba(0,0,0,0.25);
+    letter-spacing: 0.03em;
+  }
+  .figure figcaption b { color: var(--accent-2); font-weight: 600; }
+
+  /* Shimmer overlay on figures */
+  .figure::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    transition: left 0.9s;
+    pointer-events: none;
+  }
+  .figure:hover::after { left: 150%; }
+
+  /* ============ ANIMATED SVGs ============ */
+  .anim-stage {
+    position: relative;
+    background: radial-gradient(ellipse at center, rgba(124,92,255,0.08), transparent 70%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin: 22px 0;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Floating point cloud animation */
+  @keyframes float-up {
+    0% { transform: translateY(100%) scale(0.5); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-110%) scale(1.2); opacity: 0; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  @keyframes scan-line {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  @keyframes rotate-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes data-flow {
+    0% { stroke-dashoffset: 30; opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 0.3; }
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+  @keyframes orbit-slow {
+    from { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
+  }
+
+  .point-cloud-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .point-cloud-bg span {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    box-shadow: 0 0 8px var(--accent-2);
+    animation: float-up linear infinite;
+  }
+
+  .lidar-svg .beam {
+    transform-origin: 50% 100%;
+    animation: rotate-slow 4s linear infinite;
+  }
+  .lidar-svg .ping {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .net-flow line {
+    stroke-dasharray: 6 4;
+    animation: data-flow 2.2s linear infinite;
+  }
+  .net-flow .node {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  .spin-slow { animation: rotate-slow 18s linear infinite; transform-origin: center; }
+
+  /* Hero animated particles */
+  .hero-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .hero-particles .p {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo"></div>
+      <div>
+        <div class="brand-title">3D·ML Atlas</div>
+        <div class="brand-sub">v 2026.04</div>
+      </div>
+    </div>
+
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="⌕  Search chapters…" />
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-group">
+        <div class="nav-group-title">Foundations</div>
+        <a class="nav-link" href="#introduction">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5l9 4.5 9-4.5"/></svg></span>
+          <span>1. Introduction</span>
+        </a>
+        <a class="nav-link" href="#representations">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4"/><path d="M12 11v10"/></svg></span>
+          <span>2. 3D Representations</span>
+        </a>
+        <a class="nav-link" href="#sensing">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg></span>
+          <span>3. Sensing Technologies</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Architectures</div>
+        <a class="nav-link" href="#architectures">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+          <span>4. Foundational Networks</span>
+        </a>
+        <a class="nav-link nav-sub" href="#arch-pointnet">→ PointNet / PointNet++</a>
+        <a class="nav-link nav-sub" href="#arch-dgcnn">→ DGCNN</a>
+        <a class="nav-link nav-sub" href="#arch-transformer">→ Point Transformer</a>
+        <a class="nav-link nav-sub" href="#arch-litept">→ LitePT <span class="badge new" style="margin-left:6px;">NEW</span></a>
+        <a class="nav-link nav-sub" href="#arch-sparse">→ Sparse Convolutions</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Tasks</div>
+        <a class="nav-link" href="#segmentation">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M3 6h18M3 12h18M3 18h18"/></svg></span>
+          <span>5. Segmentation</span>
+        </a>
+        <a class="nav-link" href="#detection">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M3 3h6v6H3zM15 3h6v6h-6zM3 15h6v6H3zM15 15h6v6h-6z"/></svg></span>
+          <span>6. Detection & Classification</span>
+        </a>
+        <a class="nav-link" href="#enhancement">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l3.5 8L22 14l-5.5 3L13 22l-3.5-5L4 14l5.5-3z"/></svg></span>
+          <span>7. Enhancement</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Frontier</div>
+        <a class="nav-link" href="#nerf-3dgs">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9"/><path d="M12 3c3 4 3 14 0 18M12 3c-3 4-3 14 0 18M3 12h18"/></svg></span>
+          <span>8. NeRF & 3D Gaussian Splatting</span>
+        </a>
+        <a class="nav-link" href="#self-supervised">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg></span>
+          <span>9. Self-Supervised / Label-Efficient</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Practice</div>
+        <a class="nav-link" href="#datasets">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>
+          <span>10. Benchmark Datasets</span>
+        </a>
+        <a class="nav-link" href="#implementation">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg></span>
+          <span>11. Implementation Guide</span>
+        </a>
+        <a class="nav-link" href="#applications">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></span>
+          <span>12. Applications</span>
+        </a>
+        <a class="nav-link" href="#future">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg></span>
+          <span>13. Challenges & Future</span>
+        </a>
+        <a class="nav-link" href="#references">
+          <span class="nav-icon"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/></svg></span>
+          <span>14. References</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>Technical Reference</span>
+      <span class="pill">2026</span>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="breadcrumb">Docs · <b>3D Machine Learning</b> · Technical Reference</div>
+      <div class="top-actions">
+        <button class="btn">⤓  PDF</button>
+        <button class="btn">☼  Theme</button>
+        <button class="btn">★  Star</button>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero" style="display:grid; grid-template-columns: 1fr 280px; gap: 30px; align-items: center;">
+      <div>
+        <span class="hero-tag"><span class="dot"></span> April 2026 · v1.0 · Technical Reference</span>
+        <h1>3D Machine Learning &<br/><span>Point Cloud Deep Learning</span></h1>
+        <p>A comprehensive technical reference for beginners — covering 3D representations, point cloud processing, segmentation, object detection, classification, Neural Radiance Fields, 3D Gaussian Splatting, and state-of-the-art architectures through 2025.</p>
+        <div class="hero-meta">
+          <span><b>14</b> Chapters</span>
+          <span><b>35</b> Pages</span>
+          <span><b>23</b> Key References</span>
+          <span><b>SOTA</b> through 2025</span>
+        </div>
+      </div>
+      <div style="position:relative; border-radius:18px; overflow:hidden; border:1px solid rgba(124,92,255,0.3); box-shadow: 0 20px 60px rgba(124,92,255,0.25);">
+        <img src="images/img-000.png" alt="3D Point Cloud Car" style="width:100%; display:block;">
+        <div class="hero-particles">
+          <span class="p" style="background:#7c5cff; box-shadow:0 0 10px #7c5cff; top:20%; left:30%; animation-delay:0s;"></span>
+          <span class="p" style="background:#2ed3ff; box-shadow:0 0 10px #2ed3ff; top:50%; left:70%; animation-delay:0.7s;"></span>
+          <span class="p" style="background:#ff5cae; box-shadow:0 0 10px #ff5cae; top:75%; left:25%; animation-delay:1.4s;"></span>
+          <span class="p" style="background:#4ade80; box-shadow:0 0 10px #4ade80; top:35%; left:60%; animation-delay:2.1s;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 1. INTRODUCTION ========== -->
+    <section class="chapter" id="introduction">
+      <div class="chapter-header">
+        <span class="chapter-num">01</span>
+        <h2>Introduction and Motivation</h2>
+      </div>
+      <p class="chapter-intro">Three-dimensional data processing has become one of the most active research areas in modern computer vision and artificial intelligence.</p>
+
+      <p>Unlike traditional 2D images, 3D data captures the geometric structure of the physical world — enabling machines to perceive depth, shape, and spatial relationships. This capability is critical for applications ranging from <strong>autonomous driving</strong> and <strong>robotics</strong> to <strong>augmented reality</strong>, <strong>medical imaging</strong>, and <strong>digital twins</strong>.</p>
+
+      <p>The proliferation of 3D sensing technologies — LiDAR scanners, RGB-D cameras (Intel RealSense, Microsoft Kinect), structured-light sensors, and photogrammetry pipelines — has made 3D data acquisition more accessible than ever. Yet processing this data efficiently remains challenging because 3D representations are often <em>irregular, unstructured, sparse,</em> and orders of magnitude larger than their 2D counterparts.</p>
+
+      <div class="callout">
+        <div class="callout-title">◆ Key Insight</div>
+        Standard CNNs are designed for regular grid structures (pixels), whereas point clouds lack such regularity. This mismatch has driven an entire body of research into novel architectures, representations, and learning paradigms tailored for 3D data.
+      </div>
+    </section>
+
+    <!-- ========== 2. REPRESENTATIONS ========== -->
+    <section class="chapter" id="representations">
+      <div class="chapter-header">
+        <span class="chapter-num">02</span>
+        <h2>3D Data Representations</h2>
+      </div>
+      <p class="chapter-intro">Understanding the various representations of 3D data is essential before diving into learning algorithms. Each has distinct properties that influence neural network architecture and compute cost.</p>
+
+      <!-- Animated point cloud SVG -->
+      <div class="anim-stage" style="min-height: 220px;">
+        <svg viewBox="0 0 600 200" width="100%" style="max-width:700px;">
+          <defs>
+            <radialGradient id="ptGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2ed3ff" stop-opacity="1"/>
+              <stop offset="100%" stop-color="#2ed3ff" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g class="spin-slow">
+            <!-- Animated point cloud -->
+            <g opacity="0.9">
+              <circle cx="300" cy="100" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+              <circle cx="280" cy="90" r="2" fill="#7c5cff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.2s" repeatCount="indefinite"/></circle>
+              <circle cx="320" cy="110" r="2" fill="#ff5cae"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/></circle>
+              <circle cx="260" cy="105" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" repeatCount="indefinite"/></circle>
+              <circle cx="340" cy="95" r="2" fill="#7c5cff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.1s" repeatCount="indefinite"/></circle>
+              <circle cx="290" cy="120" r="2" fill="#4ade80"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.9s" repeatCount="indefinite"/></circle>
+              <circle cx="310" cy="80" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.3s" repeatCount="indefinite"/></circle>
+              <circle cx="250" cy="85" r="2" fill="#7c5cff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.5s" repeatCount="indefinite"/></circle>
+              <circle cx="350" cy="115" r="2" fill="#ff5cae"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.7s" repeatCount="indefinite"/></circle>
+              <circle cx="270" cy="130" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+              <circle cx="330" cy="70" r="2" fill="#4ade80"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.2s" repeatCount="indefinite"/></circle>
+              <circle cx="240" cy="100" r="2" fill="#7c5cff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.6s" repeatCount="indefinite"/></circle>
+              <circle cx="360" cy="100" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/></circle>
+              <circle cx="295" cy="60" r="2" fill="#ff5cae"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.1s" repeatCount="indefinite"/></circle>
+              <circle cx="305" cy="140" r="2" fill="#7c5cff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.3s" repeatCount="indefinite"/></circle>
+              <circle cx="220" cy="110" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.9s" repeatCount="indefinite"/></circle>
+              <circle cx="380" cy="90" r="2" fill="#4ade80"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" repeatCount="indefinite"/></circle>
+              <circle cx="285" cy="75" r="2" fill="#2ed3ff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+              <circle cx="315" cy="125" r="2" fill="#7c5cff"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.2s" repeatCount="indefinite"/></circle>
+              <circle cx="275" cy="145" r="2" fill="#ff5cae"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/></circle>
+            </g>
+          </g>
+          <text x="300" y="190" fill="#6b7287" font-size="11" text-anchor="middle" font-family="JetBrains Mono">P = {p₁, p₂, ..., pₙ}  ·  animated point cloud</text>
+        </svg>
+      </div>
+
+      <div class="grid">
+        <div class="mini-card">
+          <div class="mc-icon">•</div>
+          <div class="mc-title">Point Clouds</div>
+          <div class="mc-desc">Unordered sets P = {p₁…pₙ} of 3D coordinates. Permutation-invariant, irregular, and direct output of LiDAR / depth sensors.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">▦</div>
+          <div class="mc-title">Voxel Grids</div>
+          <div class="mc-desc">Regular 3D cubes. Enable 3D convolutions but grow O(R³). Sparse variants (MinkowskiEngine, TorchSparse) fix this.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">▲</div>
+          <div class="mc-title">Meshes</div>
+          <div class="mc-desc">Vertices, edges, faces. Standard in CAD/graphics. Compact for smooth surfaces but hard to generate from sensors.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">▢</div>
+          <div class="mc-title">Multi-View</div>
+          <div class="mc-desc">Render 3D → 2D images, aggregate with CNNs (MVCNN). Great for classification; weak at fine-grained geometry.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">∿</div>
+          <div class="mc-title">Implicit / Neural</div>
+          <div class="mc-desc">Continuous functions F(x,y,z) → value (occupancy, SDF, radiance). Arbitrary resolution, drives NeRF / DeepSDF.</div>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <figure class="figure">
+          <img src="images/img-002.png" alt="Voxel Grid" loading="lazy">
+          <figcaption><b>2.2 Voxel Grids</b> · Quantized 3D space into fixed-resolution cubes</figcaption>
+        </figure>
+        <figure class="figure">
+          <img src="images/img-003.png" alt="Meshes - Bunny Representations" loading="lazy">
+          <figcaption><b>2.3 Representations</b> · Point cloud → Voxel → Mesh (Stanford Bunny)</figcaption>
+        </figure>
+      </div>
+
+      <figure class="figure">
+        <img src="images/img-004.png" alt="Multi-View Projection" loading="lazy">
+        <figcaption><b>2.4 Multi-View Projection Process for 3D Learning</b> · Project 3D → 2D views → aggregate with CNNs (MVCNN)</figcaption>
+      </figure>
+
+      <figure class="figure">
+        <img src="images/img-005.png" alt="Implicit Neural Representations" loading="lazy">
+        <figcaption><b>2.5 Implicit Neural Representations (INRs)</b> · MLP maps (x,y,z) → properties (SDF, color, density)</figcaption>
+      </figure>
+
+      <h3>2.6 Comparison of Representations</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Representation</th><th>Structure</th><th>Resolution</th><th>Memory</th><th>Common Architectures</th></tr></thead>
+          <tbody>
+            <tr><td>Point Cloud</td><td>Unordered set</td><td>Sensor-dependent</td><td>Moderate</td><td>PointNet, PointNet++, DGCNN</td></tr>
+            <tr><td>Voxel Grid</td><td>Regular 3D grid</td><td>Fixed (e.g. 64³)</td><td>High (cubic)</td><td>3D CNN, MinkowskiNet</td></tr>
+            <tr><td>Mesh</td><td>Vertices + Faces</td><td>Adaptive</td><td>Low–Moderate</td><td>MeshCNN, GCN</td></tr>
+            <tr><td>Multi-View</td><td>2D projections</td><td>Image resolution</td><td>Moderate</td><td>MVCNN, RotationNet</td></tr>
+            <tr><td>Implicit (NeRF)</td><td>Continuous function</td><td>Arbitrary</td><td>Network params</td><td>NeRF, DeepSDF, 3DGS</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========== 3. SENSING ========== -->
+    <section class="chapter" id="sensing">
+      <div class="chapter-header">
+        <span class="chapter-num">03</span>
+        <h2>3D Sensing Technologies</h2>
+      </div>
+      <p class="chapter-intro">The quality and characteristics of 3D data are fundamentally shaped by the sensing technology used for acquisition.</p>
+
+      <h3>3.1 LiDAR (Light Detection and Ranging)</h3>
+      <p>LiDAR emits laser pulses and measures time-of-flight. Modern systems (<strong>Velodyne VLP-16/64, Ouster OS1</strong>) produce 360° scans with 100–200m range. Solid-state variants trade field of view for smaller form factor and lower cost. High geometric accuracy, but sparse at long range and lacks color unless fused with cameras.</p>
+
+      <!-- Animated LiDAR sweep SVG -->
+      <div class="anim-stage" style="min-height:260px;">
+        <svg viewBox="0 0 400 260" class="lidar-svg" width="100%" style="max-width:500px;">
+          <defs>
+            <radialGradient id="lidarGrad" cx="50%" cy="100%" r="70%">
+              <stop offset="0%" stop-color="#2ed3ff" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="#2ed3ff" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="beamGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2ed3ff" stop-opacity="0"/>
+              <stop offset="100%" stop-color="#2ed3ff" stop-opacity="0.85"/>
+            </linearGradient>
+          </defs>
+          <!-- ground grid -->
+          <g opacity="0.2" stroke="#2ed3ff" stroke-width="0.5" fill="none">
+            <ellipse cx="200" cy="230" rx="180" ry="20"/>
+            <ellipse cx="200" cy="230" rx="130" ry="15"/>
+            <ellipse cx="200" cy="230" rx="80" ry="10"/>
+          </g>
+          <!-- rotating beam -->
+          <g class="beam">
+            <path d="M 200 230 L 110 70 L 290 70 Z" fill="url(#beamGrad)" opacity="0.5"/>
+          </g>
+          <!-- LiDAR sensor -->
+          <circle cx="200" cy="230" r="12" fill="#7c5cff" class="ping"/>
+          <circle cx="200" cy="230" r="6" fill="#fff"/>
+          <!-- detected points -->
+          <g>
+            <circle cx="120" cy="140" r="2.5" fill="#2ed3ff"><animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/></circle>
+            <circle cx="160" cy="100" r="2.5" fill="#2ed3ff"><animate attributeName="r" values="2;4;2" dur="1.8s" repeatCount="indefinite"/></circle>
+            <circle cx="240" cy="95" r="2.5" fill="#ff5cae"><animate attributeName="r" values="2;4;2" dur="1.3s" repeatCount="indefinite"/></circle>
+            <circle cx="280" cy="130" r="2.5" fill="#2ed3ff"><animate attributeName="r" values="2;4;2" dur="1.6s" repeatCount="indefinite"/></circle>
+            <circle cx="100" cy="180" r="2.5" fill="#4ade80"><animate attributeName="r" values="2;4;2" dur="1.4s" repeatCount="indefinite"/></circle>
+            <circle cx="300" cy="170" r="2.5" fill="#4ade80"><animate attributeName="r" values="2;4;2" dur="1.7s" repeatCount="indefinite"/></circle>
+            <circle cx="180" cy="110" r="2.5" fill="#7c5cff"><animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/></circle>
+            <circle cx="220" cy="120" r="2.5" fill="#7c5cff"><animate attributeName="r" values="2;4;2" dur="1.9s" repeatCount="indefinite"/></circle>
+          </g>
+          <text x="200" y="255" fill="#6b7287" font-size="10" text-anchor="middle" font-family="JetBrains Mono">360° LiDAR Scan · Time-of-Flight</text>
+        </svg>
+      </div>
+
+      <figure class="figure">
+        <img src="images/img-006.jpg" alt="LiDAR Scans" loading="lazy">
+        <figcaption><b>LiDAR Scans</b> · Upper: range images  ·  Lower: colored LiDAR point cloud</figcaption>
+      </figure>
+
+      <h3>3.2 RGB-D Cameras</h3>
+      <p>Microsoft Kinect, Intel RealSense, Apple LiDAR capture color + per-pixel depth via structured light or time-of-flight. Dense, colored point clouds at 0.5–10m. Basis of <code>ScanNet</code> and <code>S3DIS</code> datasets.</p>
+
+      <figure class="figure">
+        <img src="images/img-007.jpg" alt="RGB-D Depth Comparison" loading="lazy">
+        <figcaption><b>RGB-D Depth Comparison</b> · Camera · LiDAR · Ground Truth · Fusion Depth across datasets (FastCaMo, DenseLivox, NYUv2)</figcaption>
+      </figure>
+
+      <h3>3.3 Photogrammetry / SfM</h3>
+      <p>Reconstructs 3D from 2D images via feature matching and triangulation. <strong>COLMAP</strong> is the workhorse SfM pipeline, densified with Multi-View Stereo. UAV photogrammetry is standard for surveying, agriculture, and cultural heritage.</p>
+
+      <figure class="figure">
+        <img src="images/img-008.png" alt="Photogrammetry SfM Workflow" loading="lazy">
+        <figcaption><b>Photogrammetry & Structure-from-Motion Workflow</b> · Aerial imagery → Feature matching → SfM/COLMAP → Dense MVS → Textured 3D mesh</figcaption>
+      </figure>
+
+      <h3>3.4 Radar & Emerging Modalities</h3>
+      <p>Millimeter-wave radar is robust to rain, fog, snow where LiDAR and cameras fail. Sparser and noisier, but complements optical sensors in multi-modal fusion. Emerging: event cameras, acoustic sensors, 4D radar with Doppler velocity.</p>
+
+      <figure class="figure">
+        <img src="images/img-009.png" alt="4D Radar Perception" loading="lazy">
+        <figcaption><b>RAPA</b> · Real-time Attention-based Pillar Architecture for 4D Radar Perception</figcaption>
+      </figure>
+    </section>
+
+    <!-- ========== 4. ARCHITECTURES ========== -->
+    <section class="chapter" id="architectures">
+      <div class="chapter-header">
+        <span class="chapter-num">04</span>
+        <h2>Foundational Deep Learning Architectures</h2>
+      </div>
+      <p class="chapter-intro">The landmark networks that established point cloud deep learning — still serving as backbones for modern methods.</p>
+
+      <div id="arch-pointnet" class="card">
+        <h3 style="margin-top:0;">4.1 PointNet <span class="badge year">CVPR 2017</span></h3>
+        <p>The first architecture to directly consume raw point clouds — no voxelization, no images. Three core design principles solve fundamental challenges:</p>
+        <ul class="clean">
+          <li><strong>Permutation Invariance:</strong> shared MLP per point + symmetric max-pool aggregation.</li>
+          <li><strong>Transformation Invariance:</strong> T-Nets predict 3×3 (input) and 64×64 (feature) alignment matrices.</li>
+          <li><strong>Architecture:</strong> N×3 → shared MLP (64→128→1024) → max-pool → global feature → FC → class scores.</li>
+        </ul>
+        <div class="flow">
+          <div class="flow-step">N × 3 input</div><span class="flow-arrow">→</span>
+          <div class="flow-step">Shared MLP</div><span class="flow-arrow">→</span>
+          <div class="flow-step">Max Pool</div><span class="flow-arrow">→</span>
+          <div class="flow-step">Global Feature</div><span class="flow-arrow">→</span>
+          <div class="flow-step">Class Scores</div>
+        </div>
+        <div class="callout warn">
+          <div class="callout-title">⚠ Limitation</div>
+          Each point is processed independently before aggregation — PointNet cannot capture local geometric structure or neighbor relationships.
+        </div>
+
+        <figure class="figure">
+          <img src="images/img-011.png" alt="PointNet and PointNet++ Architectures" loading="lazy">
+          <figcaption><b>PointNet & PointNet++ Architectures</b> · Top: Shared MLP + max-pool. Bottom: Hierarchical set abstraction with FPS + Ball Query.</figcaption>
+        </figure>
+
+        <h3>4.2 PointNet++ <span class="badge year">NeurIPS 2017</span></h3>
+        <p>Addresses local-structure blindness via hierarchical <strong>Set Abstraction</strong> layers:</p>
+        <ul class="clean">
+          <li><strong>Sampling:</strong> Farthest Point Sampling (FPS) selects centroids.</li>
+          <li><strong>Grouping:</strong> Ball query / kNN for each local region.</li>
+          <li><strong>PointNet Layer:</strong> mini-PointNet extracts features per region.</li>
+          <li><strong>MSG:</strong> Multi-Scale Grouping handles non-uniform density.</li>
+          <li><strong>Feature Propagation:</strong> inverse-distance interpolation for per-point segmentation.</li>
+        </ul>
+        <figure class="figure">
+          <img src="images/img-010.png" alt="Unified PointNet++ Architecture" loading="lazy">
+          <figcaption><b>Unified PointNet++</b> · Ellipsoid-Augmented Grouping and Feature Fusion for airplane classification</figcaption>
+        </figure>
+      </div>
+
+      <div id="arch-dgcnn" class="card">
+        <h3 style="margin-top:0;">4.3 DGCNN — Dynamic Graph CNN <span class="badge year">ACM TOG 2019</span></h3>
+        <p>Introduces <strong>EdgeConv</strong>: builds a kNN graph in feature space (not original 3D space) and recomputes it at every layer. Edge features h(xᵢ, xⱼ) = MLP(xᵢ, xⱼ − xᵢ) aggregated via max-pool. Captures semantic similarity beyond spatial proximity.</p>
+
+        <!-- Animated network flow SVG -->
+        <div class="anim-stage" style="min-height:200px; background: radial-gradient(ellipse at center, rgba(46,211,255,0.06), transparent 70%);">
+          <svg viewBox="0 0 500 180" class="net-flow" width="100%" style="max-width:600px;">
+            <defs>
+              <radialGradient id="nodeGrad">
+                <stop offset="0%" stop-color="#7c5cff"/>
+                <stop offset="100%" stop-color="#2ed3ff"/>
+              </radialGradient>
+            </defs>
+            <!-- Dynamic graph edges -->
+            <line x1="100" y1="90" x2="200" y2="60" stroke="#7c5cff" stroke-width="1.5" opacity="0.6"/>
+            <line x1="100" y1="90" x2="200" y2="100" stroke="#2ed3ff" stroke-width="1.5" opacity="0.6"/>
+            <line x1="100" y1="90" x2="200" y2="140" stroke="#ff5cae" stroke-width="1.5" opacity="0.6"/>
+            <line x1="200" y1="60" x2="300" y2="50" stroke="#7c5cff" stroke-width="1.5" opacity="0.6"/>
+            <line x1="200" y1="100" x2="300" y2="90" stroke="#2ed3ff" stroke-width="1.5" opacity="0.6"/>
+            <line x1="200" y1="140" x2="300" y2="130" stroke="#ff5cae" stroke-width="1.5" opacity="0.6"/>
+            <line x1="300" y1="50" x2="400" y2="90" stroke="#7c5cff" stroke-width="1.5" opacity="0.6"/>
+            <line x1="300" y1="90" x2="400" y2="90" stroke="#2ed3ff" stroke-width="1.5" opacity="0.6"/>
+            <line x1="300" y1="130" x2="400" y2="90" stroke="#ff5cae" stroke-width="1.5" opacity="0.6"/>
+            <!-- Nodes -->
+            <circle class="node" cx="100" cy="90" r="8" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="200" cy="60" r="7" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="200" cy="100" r="7" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="200" cy="140" r="7" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="300" cy="50" r="7" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="300" cy="90" r="7" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="300" cy="130" r="7" fill="url(#nodeGrad)"/>
+            <circle class="node" cx="400" cy="90" r="10" fill="#ff5cae"/>
+            <!-- Labels -->
+            <text x="100" y="115" fill="#6b7287" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Input</text>
+            <text x="200" y="170" fill="#6b7287" font-size="9" text-anchor="middle" font-family="JetBrains Mono">EdgeConv 1</text>
+            <text x="300" y="170" fill="#6b7287" font-size="9" text-anchor="middle" font-family="JetBrains Mono">EdgeConv 2</text>
+            <text x="400" y="115" fill="#6b7287" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Output</text>
+          </svg>
+        </div>
+
+        <figure class="figure">
+          <img src="images/img-012.png" alt="DGCNN Point Cloud Analysis" loading="lazy">
+          <figcaption><b>Integrated Point Cloud Analysis</b> · Object Detection and Classification with DGCNN backbone</figcaption>
+        </figure>
+      </div>
+
+      <div id="arch-transformer" class="card">
+        <h3 style="margin-top:0;">4.4 Point Transformer <span class="badge year">ICCV 2021</span></h3>
+        <p>Adapts self-attention to points with <strong>vector attention</strong> (weights are vectors, not scalars). Attention computed between a query point and its kNN, with positional encoding for relative geometry. <strong>Point Transformer V3 (2024)</strong> uses serialization-based attention for SOTA across SemanticKITTI, nuScenes, and ScanNet.</p>
+        <figure class="figure">
+          <img src="images/img-013.png" alt="Point Transformer U-Net Architecture" loading="lazy">
+          <figcaption><b>Comprehensive Point Cloud Analysis</b> · U-Net with skip connections for semantic segmentation + encoder-based classification head</figcaption>
+        </figure>
+      </div>
+
+      <div id="arch-litept" class="card" style="border-color: rgba(124, 92, 255, 0.35); background: linear-gradient(180deg, rgba(124, 92, 255, 0.06), transparent);">
+        <h3 style="margin-top:0;">4.5 LitePT — Lite Point Transformer <span class="badge sota">SOTA</span> <span class="badge year">2025</span></h3>
+        <p>A highly optimized hybrid architecture that addresses the computational bottlenecks of PTv3 by strategically decoupling convolutions and attention on a multi-scale perspective:</p>
+        <ul class="clean">
+          <li><strong>Sparse convolutions</strong> in early, high-resolution stages (cheap geometric features).</li>
+          <li><strong>Self-attention</strong> only in deep layers for long-range context.</li>
+          <li><strong>PointROPE:</strong> novel training-free 3D positional encoding.</li>
+        </ul>
+        <div class="callout tip">
+          <div class="callout-title">✓ Efficiency</div>
+          <strong>3.6×</strong> fewer parameters · <strong>2×</strong> faster · <strong>½</strong> memory versus PTv3, while matching or exceeding accuracy on major 3D semantic and instance segmentation benchmarks.
+        </div>
+        <figure class="figure">
+          <img src="images/img-014.png" alt="LitePT Block Architecture" loading="lazy">
+          <figcaption><b>LitePT Block Architecture</b> · Stem · Convolution · Attention · Pooling · Unpooling with PointROPE</figcaption>
+        </figure>
+      </div>
+
+      <div id="arch-sparse" class="card">
+        <h3 style="margin-top:0;">4.6 Sparse Convolution Networks</h3>
+        <p><strong>MinkowskiNet, SparseConvNet, TorchSparse</strong> apply 3D convolutions only on occupied voxels — avoiding the cubic memory cost of dense grids. Backbone of many state-of-the-art methods on SemanticKITTI and ScanNet. Key insight: real-world 3D scenes are overwhelmingly empty space.</p>
+        <figure class="figure">
+          <img src="images/img-021.png" alt="Sparse Convolution Coordinate Map" loading="lazy">
+          <figcaption><b>Sparse Convolution</b> · Coordinate map (hash table) + sparse kernel aggregation, skipping empty voxels</figcaption>
+        </figure>
+      </div>
+
+      <h3>4.7 Architecture Comparison</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Architecture</th><th>Year</th><th>Mechanism</th><th>Local Features</th><th>Scalability</th></tr></thead>
+          <tbody>
+            <tr><td>PointNet</td><td>2017</td><td>Shared MLP + Max Pool</td><td>No</td><td>Good</td></tr>
+            <tr><td>PointNet++</td><td>2017</td><td>Hierarchical Set Abstraction</td><td>Yes (ball query)</td><td>Moderate</td></tr>
+            <tr><td>DGCNN</td><td>2019</td><td>Dynamic Graph EdgeConv</td><td>Yes (kNN graph)</td><td>Moderate</td></tr>
+            <tr><td>Point Transformer</td><td>2021</td><td>Vector Self-Attention</td><td>Yes (kNN attention)</td><td>Moderate–Good</td></tr>
+            <tr><td>MinkowskiNet</td><td>2019</td><td>Sparse 3D Conv</td><td>Yes (voxel)</td><td>Excellent</td></tr>
+            <tr><td>KPConv</td><td>2019</td><td>Kernel Point Conv</td><td>Yes (continuous)</td><td>Good</td></tr>
+            <tr><td><strong>LitePT</strong></td><td><strong>2025</strong></td><td>Sparse Conv + Attention (PointROPE)</td><td>Yes (sparse conv)</td><td><strong>Excellent</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========== 5. SEGMENTATION ========== -->
+    <section class="chapter" id="segmentation">
+      <div class="chapter-header">
+        <span class="chapter-num">05</span>
+        <h2>3D Point Cloud Segmentation</h2>
+      </div>
+      <p class="chapter-intro">Arguably the most important task in 3D scene understanding — foundation for reasoning about objects, surfaces, and spatial relationships.</p>
+
+      <div class="grid">
+        <div class="mini-card"><div class="mc-icon">⬡</div><div class="mc-title">Semantic</div><div class="mc-desc">One class label per point — analogous to pixel-wise 2D segmentation.</div></div>
+        <div class="mini-card"><div class="mc-icon">⬢</div><div class="mc-title">Instance</div><div class="mc-desc">Distinguish individual objects: each chair gets a unique ID.</div></div>
+        <div class="mini-card"><div class="mc-icon">◉</div><div class="mc-title">Panoptic</div><div class="mc-desc">Semantic + instance unified: things get IDs, stuff gets class labels only.</div></div>
+        <div class="mini-card"><div class="mc-icon">◈</div><div class="mc-title">Part</div><div class="mc-desc">Decompose single objects into parts (wings, legs, back).</div></div>
+      </div>
+
+      <figure class="figure">
+        <img src="images/img-022.png" alt="3D Point Cloud Segmentation Types & Methods" loading="lazy">
+        <figcaption><b>3D Point Cloud Segmentation Types & Methods</b> · Semantic / Instance / Panoptic · Point-based, Projection-based, Voxel-based, Transformer-based</figcaption>
+      </figure>
+
+      <h3>5.1 Semantic Segmentation Approaches</h3>
+      <h4>Point-Based</h4>
+      <p>Operate directly on raw point clouds. <strong>RandLA-Net</strong> (CVPR 2020) scales to millions of points via random sampling + attentive pooling. <strong>PointWeb</strong> models all pairwise interactions within local regions.</p>
+      <h4>Projection-Based</h4>
+      <p><strong>SqueezeSeg, SqueezeSegV2</strong> project LiDAR into range images for efficient 2D CNNs. <strong>2DPASS</strong> (ECCV 2022) fuses 2D image features with 3D points via knowledge distillation.</p>
+      <h4>Voxel-Based</h4>
+      <p><strong>Cylinder3D</strong> (CVPR 2021) uses cylindrical voxelization matching LiDAR's scan pattern. <strong>SPVNAS</strong> applies NAS to find optimal sparse voxel architectures.</p>
+      <h4>Transformer-Based</h4>
+      <p><strong>SphereFormer</strong>, <strong>UniSeg</strong>, <strong>Point Transformer V3</strong> — SOTA across SemanticKITTI, nuScenes, ScanNet.</p>
+
+      <h3>5.2 Instance Segmentation</h3>
+      <p><strong>PointGroup</strong> (CVPR 2020): dual-branch architecture — semantic + offset toward centroids. <strong>SoftGroup</strong> (CVPR 2022) improves with soft scores and top-down refinement. <strong>Mask3D</strong> (ICRA 2023) formulates 3D instance seg as direct set prediction with transformer decoders.</p>
+
+      <h3>5.3 Panoptic Segmentation</h3>
+      <p>Unified framework: countable things get instance IDs; stuff (ground, walls) gets semantic only. <strong>Panoptic-PolarNet, DS-Net, EfficientLPS</strong> target outdoor LiDAR and indoor scenes respectively.</p>
+
+      <h3>5.4 Part Segmentation</h3>
+      <p>Decomposes objects into parts (airplane: wings, fuselage, tail). <strong>ShapeNet-Part</strong> is the standard benchmark: 16,881 shapes, 16 categories, 50 part classes. <strong>PartNet</strong> adds finer hierarchical annotations.</p>
+    </section>
+
+    <!-- ========== 6. DETECTION ========== -->
+    <section class="chapter" id="detection">
+      <div class="chapter-header">
+        <span class="chapter-num">06</span>
+        <h2>3D Object Detection & Classification</h2>
+      </div>
+      <p class="chapter-intro">Localize objects in 3D by predicting oriented bounding boxes — critical for autonomous driving.</p>
+
+      <figure class="figure">
+        <img src="images/img-023.png" alt="3D Object Detection System Overview" loading="lazy">
+        <figcaption><b>3D Object Detection</b> · System overview with detector architectures (VoteNet, PointRCNN, VoxelNet, CenterPoint, PV-RCNN) and multi-modal fusion</figcaption>
+      </figure>
+
+      <h3>6.1 Detector Families</h3>
+      <h4>Point-Based Detectors</h4>
+      <p><strong>VoteNet</strong> (ICCV 2019) adapts Hough voting: each point votes for its object center. <strong>PointRCNN</strong> (CVPR 2019) runs a two-stage pipeline directly on raw points. <strong>3DSSD</strong> (CVPR 2020) achieves single-stage detection via feature-distance sampling.</p>
+      <h4>Voxel-Based Detectors</h4>
+      <p><strong>VoxelNet</strong> (CVPR 2018), <strong>SECOND</strong> (spatially-sparse conv, 2018), <strong>CenterPoint</strong> (CVPR 2021, BEV heatmap), <strong>PV-RCNN</strong> (CVPR 2020, point+voxel fusion).</p>
+      <h4>Multi-Modal Fusion</h4>
+      <p><strong>BEVFusion</strong> (2023): LiDAR + camera in unified bird's-eye view. <strong>TransFusion</strong> (CVPR 2022): transformer cross-attention. <strong>Frustum PointNets</strong> (CVPR 2018): 2D detections → 3D frustums.</p>
+
+      <h3>6.2 3D Shape Classification</h3>
+      <p>Single label per object. Benchmarks: <code>ModelNet40</code> (40 classes, 12,311 CAD models), <code>ScanObjectNN</code> (real scans with clutter, 15 classes). SOTA: <strong>&gt;93%</strong> on ModelNet40, <strong>~88%</strong> on ScanObjectNN.</p>
+      <figure class="figure">
+        <img src="images/img-024.png" alt="3D Shape Classification" loading="lazy">
+        <figcaption><b>3D Shape Classification</b> · Concept & datasets · Key methods (PointNet → PointNet++ → DGCNN → Point Transformer → CurveNet/PointMLP) · Simplicity vs Complexity</figcaption>
+      </figure>
+      <div class="callout tip">
+        <div class="callout-title">◆ Recent Insight</div>
+        Simpler architectures with proper training recipes (strong augmentation, cosine LR schedules) can match complex architectures — challenging the assumption that architectural novelty alone drives progress.
+      </div>
+    </section>
+
+    <!-- ========== 7. ENHANCEMENT ========== -->
+    <section class="chapter" id="enhancement">
+      <div class="chapter-header">
+        <span class="chapter-num">07</span>
+        <h2>Point Cloud Enhancement</h2>
+      </div>
+      <p class="chapter-intro">Raw sensor point clouds are noisy, incomplete, and sparse. Enhancement techniques improve data quality for downstream tasks.</p>
+
+      <div class="grid">
+        <div class="mini-card">
+          <div class="mc-icon">≈</div>
+          <div class="mc-title">Denoising</div>
+          <div class="mc-desc"><strong>PointCleanNet</strong> (2020): outlier removal + displacement. Score-based methods model the gradient of the clean distribution and iteratively move noisy points to the surface.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">⊕</div>
+          <div class="mc-title">Completion</div>
+          <div class="mc-desc"><strong>PCN</strong> (2018): coarse-to-fine encoder-decoder. <strong>PoinTr</strong> (ICCV 2021): set-to-set translation via transformers. <strong>SnowflakeNet</strong> (ICCV 2021): snowflake iterative refinement.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">↥</div>
+          <div class="mc-title">Upsampling</div>
+          <div class="mc-desc"><strong>PU-Net</strong>, <strong>PU-GAN</strong> (adversarial), <strong>Dis-PU</strong> (coarse generation + spatial refinement). Enhances low-res LiDAR and reconstructed surfaces.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">⇌</div>
+          <div class="mc-title">Registration</div>
+          <div class="mc-desc">Classical <strong>ICP</strong>. Deep: <strong>DCP</strong> (attention matching, ICCV 2019), <strong>PRNet/RPMNet</strong> (partial-to-partial), <strong>DGR</strong> (6D convolutions for global alignment).</div>
+        </div>
+      </div>
+
+      <h3>7.1 Denoising</h3>
+      <figure class="figure">
+        <img src="images/img-025.png" alt="Point Cloud Denoising" loading="lazy">
+        <figcaption><b>Denoising</b> · Traditional methods (Statistical Outlier Removal, MLS) vs Deep Learning (PointCleanNet, Score-based gradient modeling)</figcaption>
+      </figure>
+
+      <h3>7.2 Completion</h3>
+      <figure class="figure">
+        <img src="images/img-026.png" alt="Point Cloud Completion" loading="lazy">
+        <figcaption><b>Completion</b> · PCN (encoder-decoder) · PoinTr (transformer set-to-set) · SnowflakeNet (iterative refinement)</figcaption>
+      </figure>
+
+      <h3>7.3 Upsampling</h3>
+      <figure class="figure">
+        <img src="images/img-027.png" alt="Point Cloud Upsampling" loading="lazy">
+        <figcaption><b>Upsampling</b> · PU-Net (feature expansion) · PU-GAN (adversarial) · Dis-PU (coarse → spatial refinement)</figcaption>
+      </figure>
+
+      <h3>7.4 Registration</h3>
+      <figure class="figure">
+        <img src="images/img-028.png" alt="Point Cloud Registration Pipeline" loading="lazy">
+        <figcaption><b>Registration Pipeline</b> · Classical ICP · DCP (attention matching) · Partial-to-partial (PRNet/RPMNet) · Deep Global Registration (6D convs)</figcaption>
+      </figure>
+    </section>
+
+    <!-- ========== 8. NeRF / 3DGS ========== -->
+    <section class="chapter" id="nerf-3dgs">
+      <div class="chapter-header">
+        <span class="chapter-num">08</span>
+        <h2>Neural Radiance Fields & 3D Gaussian Splatting</h2>
+      </div>
+      <p class="chapter-intro">The 2020 arrival of NeRF and 2023 breakthrough of 3DGS transformed 3D scene representation and novel view synthesis — increasingly intersecting with point cloud processing.</p>
+
+      <h3>8.1 Neural Radiance Fields (NeRF)</h3>
+      <p><strong>Mildenhall et al. (ECCV 2020)</strong> represent a scene as a continuous function F(x, y, z, θ, φ) → (r, g, b, σ). An MLP trained on multi-view images with known camera poses. Novel views via differentiable volume rendering along camera rays.</p>
+
+      <figure class="figure">
+        <img src="images/img-029.png" alt="NeRF Architecture" loading="lazy">
+        <figcaption><b>NeRF</b> · CNN encoder · Volume rendering along rays · Rendering loss · Feature grid encoding</figcaption>
+      </figure>
+      <h4>Key Variants</h4>
+      <ul class="clean">
+        <li><strong>Mip-NeRF</strong> (ICCV 2021): cone tracing replaces point sampling — anti-aliasing.</li>
+        <li><strong>Mip-NeRF 360:</strong> unbounded scene extension.</li>
+        <li><strong>Instant-NGP</strong> (SIGGRAPH 2022): multi-resolution hash encoding — training in seconds.</li>
+        <li><strong>TensoRF</strong> (ECCV 2022): tensor decomposition for compact storage.</li>
+      </ul>
+      <p><strong>Beyond novel views:</strong> dynamic scenes (D-NeRF, Nerfies), surface reconstruction (NeuS, Neuralangelo), large-scale urban (Block-NeRF, Urban Radiance Fields), SLAM, generative modeling.</p>
+
+      <h3>8.2 3D Gaussian Splatting (3DGS)</h3>
+      <p><strong>Kerbl et al. (SIGGRAPH 2023):</strong> scenes represented as anisotropic 3D Gaussians parameterized by position, covariance, opacity, and spherical-harmonic view-dependent color. <strong>Explicit</strong> rather than implicit, enabling real-time rendering (<strong>100+ FPS</strong>) via tile-based rasterization.</p>
+
+      <figure class="figure">
+        <img src="images/img-030.png" alt="3D Gaussian Splatting Pipeline" loading="lazy">
+        <figcaption><b>3DGS Pipeline</b> · Depth estimation → encoder-decoder → predicted Gaussian parameters → tile-based splatting → photometric + α-blending loss</figcaption>
+      </figure>
+
+      <div class="flow">
+        <div class="flow-step">SfM Sparse Cloud</div><span class="flow-arrow">→</span>
+        <div class="flow-step">Initialize Gaussians</div><span class="flow-arrow">→</span>
+        <div class="flow-step">Optimize params</div><span class="flow-arrow">→</span>
+        <div class="flow-step">Adaptive density control</div><span class="flow-arrow">→</span>
+        <div class="flow-step">Real-time Rendering</div>
+      </div>
+
+      <h4>Advantages Over NeRF</h4>
+      <p>Real-time rendering, explicit geometry (no ray marching), direct editability, faster training. The preferred method for VR/AR, robotics, and digital twins.</p>
+
+      <h4>Recent Advances</h4>
+      <ul class="clean">
+        <li><strong>2DGS</strong> (2024): 2D Gaussian disks → better surface reconstruction.</li>
+        <li><strong>GS-SLAM:</strong> real-time dense mapping.</li>
+        <li><strong>Gaussian Frosting, SuGaR:</strong> mesh extraction from Gaussians.</li>
+        <li><strong>NeRF-GS</strong> (ICCV 2025): NeRF's continuous modeling + 3DGS rendering.</li>
+      </ul>
+
+      <h3>8.3 Relationship to Point Clouds</h3>
+      <p>NeRF and 3DGS both start from sparse SfM point clouds. 3DGS is essentially a <em>learned, enriched point cloud</em> — each Gaussian center carries geometric + appearance attributes. Dense point clouds extractable from both for downstream processing; pre-trained point features can initialize radiance-field optimization.</p>
+    </section>
+
+    <!-- ========== 9. SELF-SUPERVISED ========== -->
+    <section class="chapter" id="self-supervised">
+      <div class="chapter-header">
+        <span class="chapter-num">09</span>
+        <h2>Self-Supervised & Label-Efficient Learning</h2>
+      </div>
+      <p class="chapter-intro">Annotating 3D data is far more expensive than 2D — driving research into reducing annotation requirements.</p>
+
+      <h3>9.1 Self-Supervised Pre-Training</h3>
+      <ul class="clean">
+        <li><strong>Point-MAE</strong> (ECCV 2022): masked autoencoding — predict masked point patches.</li>
+        <li><strong>Point-BERT</strong> (CVPR 2022): VQ-VAE tokenization + BERT-style masked prediction.</li>
+        <li><strong>PointContrast</strong> (ECCV 2020): contrastive learning between corresponding points across views.</li>
+      </ul>
+
+      <figure class="figure">
+        <img src="images/img-031.png" alt="Point-MAE Masked Autoencoder" loading="lazy">
+        <figcaption><b>Point-MAE</b> · Masking and embedding (KNN + FPS centers) → Autoencoder pre-training with Chamfer Distance loss</figcaption>
+      </figure>
+
+      <h3>9.2 Weakly / Semi-Supervised</h3>
+      <p>Train with scene-level, sparse point, bounding box, or subcloud annotations. Common: 1% or 0.1% labeled points + consistency regularization / pseudo-labeling. Semi-supervised methods use mean-teacher, self-training, contrastive regularization.</p>
+
+      <h3>9.3 Language-Guided 3D</h3>
+      <p>Align 3D features with CLIP / OpenCLIP text embeddings. <strong>ScanNet200</strong> benchmark (ECCV 2022) showed <strong>&gt;5% mIoU</strong> gains from language-grounded pre-training for rare classes. <strong>OpenScene</strong>, <strong>LERF</strong> extend to open-vocabulary 3D understanding.</p>
+
+      <h3>9.4 Foundation Models for 3D</h3>
+      <p><strong>SAM3D</strong>, <strong>Segment3D</strong> adapt SAM to point clouds. <strong>Point-Bind</strong> and <strong>Point-LLM</strong> connect 3D encoders with LLMs for multi-modal reasoning. Early stages, pointing toward general-purpose 3D understanding via natural language.</p>
+    </section>
+
+    <!-- ========== 10. DATASETS ========== -->
+    <section class="chapter" id="datasets">
+      <div class="chapter-header">
+        <span class="chapter-num">10</span>
+        <h2>Benchmark Datasets & Evaluation Metrics</h2>
+      </div>
+      <p class="chapter-intro">Standardized datasets are essential for fair comparison and tracking progress.</p>
+
+      <h3>10.1 Object-Level Datasets</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dataset</th><th>Type</th><th>Categories</th><th>Size</th><th>Primary Task</th></tr></thead>
+          <tbody>
+            <tr><td>ModelNet40</td><td>Synthetic CAD</td><td>40</td><td>12,311</td><td>Classification</td></tr>
+            <tr><td>ModelNet10</td><td>Synthetic CAD</td><td>10</td><td>4,899</td><td>Classification</td></tr>
+            <tr><td>ShapeNet</td><td>Synthetic CAD</td><td>55 (Core)</td><td>51,127</td><td>Multiple</td></tr>
+            <tr><td>ShapeNet-Part</td><td>Synthetic CAD</td><td>16 (50 parts)</td><td>16,881</td><td>Part Segmentation</td></tr>
+            <tr><td>ScanObjectNN</td><td>Real scans</td><td>15</td><td>2,902</td><td>Classification</td></tr>
+            <tr><td>PartNet</td><td>Synthetic CAD</td><td>24 (fine)</td><td>26,671</td><td>Hierarchical Part</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>10.2 Indoor Scene Datasets</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dataset</th><th>Sensor</th><th>Scenes</th><th>Annotations</th><th>Primary Task</th></tr></thead>
+          <tbody>
+            <tr><td>ScanNet v2</td><td>RGB-D</td><td>1,513 scans · 707 rooms</td><td>20 (200 in ScanNet200)</td><td>Semantic / Instance</td></tr>
+            <tr><td>S3DIS</td><td>Matterport</td><td>6 areas · 272 rooms</td><td>13 classes</td><td>Semantic</td></tr>
+            <tr><td>Matterport3D</td><td>Matterport</td><td>90 buildings</td><td>40 classes</td><td>Semantic</td></tr>
+            <tr><td>SUN RGB-D</td><td>RGB-D</td><td>10,335 images</td><td>37 classes</td><td>Detection / Seg.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>10.3 Outdoor / Autonomous Driving Datasets</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Dataset</th><th>Sensor</th><th>Sequences</th><th>Annotations</th><th>Primary Task</th></tr></thead>
+          <tbody>
+            <tr><td>SemanticKITTI</td><td>Velodyne-64</td><td>22 seqs · 43K scans</td><td>28 classes</td><td>Semantic</td></tr>
+            <tr><td>nuScenes</td><td>32-beam LiDAR + 6 cams</td><td>1,000 scenes</td><td>23 classes + 3D boxes</td><td>Det. / Seg.</td></tr>
+            <tr><td>KITTI 3D</td><td>Velodyne-64 + stereo</td><td>7,481 train/test</td><td>Car/Ped/Cyclist</td><td>3D Detection</td></tr>
+            <tr><td>Waymo Open</td><td>Top + 4 side LiDAR</td><td>1,150 segments</td><td>4 classes + 3D boxes</td><td>Det. / Seg.</td></tr>
+            <tr><td>Argoverse 2</td><td>2× 32-beam LiDAR</td><td>1,000 logs</td><td>30 classes</td><td>Det. / Forecasting</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>10.4 Evaluation Metrics</h3>
+      <div class="grid">
+        <div class="mini-card"><div class="mc-title">mIoU</div><div class="mc-desc">TP / (TP+FP+FN) averaged per class. Standard for semantic segmentation — handles class imbalance better than accuracy.</div></div>
+        <div class="mini-card"><div class="mc-title">mAP</div><div class="mc-desc">Average precision at IoU thresholds (0.25 lenient, 0.5 tighter). Standard for 3D detection and instance segmentation.</div></div>
+        <div class="mini-card"><div class="mc-title">Overall Accuracy</div><div class="mc-desc">Percent of correctly classified points/objects. Used for ModelNet40; misleading with class imbalance.</div></div>
+        <div class="mini-card"><div class="mc-title">Panoptic Quality (PQ)</div><div class="mc-desc">PQ = SQ × RQ. Segmentation quality (avg IoU) × recognition quality (detection F1). Standard panoptic metric.</div></div>
+      </div>
+    </section>
+
+    <!-- ========== 11. IMPLEMENTATION ========== -->
+    <section class="chapter" id="implementation">
+      <div class="chapter-header">
+        <span class="chapter-num">11</span>
+        <h2>Practical Implementation Guide</h2>
+      </div>
+      <p class="chapter-intro">Frameworks, preprocessing, training strategies, and the pitfalls to avoid.</p>
+
+      <h3>11.1 Software Frameworks</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Framework</th><th>Language</th><th>Key Features</th></tr></thead>
+          <tbody>
+            <tr><td>PyTorch3D (Meta)</td><td>Python / CUDA</td><td>Differentiable rendering, mesh ops, point cloud ops</td></tr>
+            <tr><td>Open3D</td><td>Python / C++</td><td>Point cloud I/O, viz, ICP, surface reconstruction</td></tr>
+            <tr><td>MinkowskiEngine</td><td>Python / CUDA</td><td>Sparse tensor ops, sparse 3D convolutions</td></tr>
+            <tr><td>TorchSparse</td><td>Python / CUDA</td><td>Efficient sparse convolutions, point-voxel fusion</td></tr>
+            <tr><td>PointCloud Library (PCL)</td><td>C++</td><td>Classical filtering, segmentation, registration</td></tr>
+            <tr><td>MMDetection3D</td><td>Python</td><td>Unified detection framework, multiple backbones</td></tr>
+            <tr><td>Nerfstudio</td><td>Python</td><td>Modular NeRF framework with GUI, supports 3DGS</td></tr>
+            <tr><td>PyTorch Geometric</td><td>Python / CUDA</td><td>GNNs, point cloud ops via message passing</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>11.2 Preprocessing Pipeline</h3>
+      <ol class="clean" style="list-style:none; counter-reset:step;">
+        <li style="counter-increment:step;"><strong>Coordinate normalization</strong> — center and scale to unit sphere / bbox.</li>
+        <li style="counter-increment:step;"><strong>Downsampling</strong> — voxel grid or FPS to target point count.</li>
+        <li style="counter-increment:step;"><strong>Augmentation</strong> — random rotation, scaling, jittering, elastic distortion, random dropout, mixup.</li>
+        <li style="counter-increment:step;"><strong>Normal estimation</strong> — PCA on local neighborhoods for methods requiring normals.</li>
+        <li style="counter-increment:step;"><strong>Handcrafted features</strong> — FPFH, SHOT as auxiliary descriptors.</li>
+      </ol>
+
+      <h3>11.3 Training Strategies</h3>
+      <p>Use <strong>cosine annealing / one-cycle</strong> LR schedules. Enable <strong>FP16 mixed precision</strong> — 3D data is memory-hungry. Apply <strong>gradient accumulation</strong> for effective larger batch sizes. <strong>Class-weighted or focal loss</strong> to address severe imbalance (ground ≫ cyclists in driving scenes). Aggressive augmentation.</p>
+
+      <h3>11.4 Common Pitfalls</h3>
+      <div class="grid">
+        <div class="mini-card"><div class="mc-title">Memory Overflow</div><div class="mc-desc">Sparse reps, random subsampling, sliding-window inference, mixed precision.</div></div>
+        <div class="mini-card"><div class="mc-title">Coordinate System Mismatch</div><div class="mc-desc">Datasets differ on right/left-hand, Z-up / Y-up — always verify and standardize.</div></div>
+        <div class="mini-card"><div class="mc-title">Class Imbalance</div><div class="mc-desc">Ground &gt;50%, cyclists &lt;0.1%. Use class weighting, focal loss, oversampling.</div></div>
+        <div class="mini-card"><div class="mc-title">Density Variation</div><div class="mc-desc">LiDAR density ∝ 1/distance². Use multi-scale architectures, density-adaptive sampling.</div></div>
+        <div class="mini-card"><div class="mc-title">Evaluation Mismatch</div><div class="mc-desc">Different splits, augmentation, post-processing — compare under identical conditions.</div></div>
+      </div>
+    </section>
+
+    <!-- ========== 12. APPLICATIONS ========== -->
+    <section class="chapter" id="applications">
+      <div class="chapter-header">
+        <span class="chapter-num">12</span>
+        <h2>Applications</h2>
+      </div>
+
+      <div class="grid">
+        <div class="mini-card">
+          <div class="mc-icon">⛟</div>
+          <div class="mc-title">Autonomous Driving</div>
+          <div class="mc-desc">Largest application domain. CenterPoint, PV-RCNN, TransFusion for detection. Cylinder3D, 2DPASS for driving-scene semantic seg. BEV has emerged as the dominant multi-sensor fusion paradigm.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">⚙</div>
+          <div class="mc-title">Robotics & Manipulation</div>
+          <div class="mc-desc">Grasping (GraspNet-1Billion), navigation, scene understanding. Point-cloud SLAM for GPS-denied environments. 6-DoF pose estimation (DenseFusion, FFB6D).</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">✚</div>
+          <div class="mc-title">Medical Imaging</div>
+          <div class="mc-desc">Organ segmentation, surgical planning, tooth seg from intraoral scans, bone surface reconstruction from CT. Irregular anatomical geometry suits point methods.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">🏙</div>
+          <div class="mc-title">Urban Planning & Digital Twins</div>
+          <div class="mc-desc">Aerial LiDAR + photogrammetry for building footprints, vegetation maps, change detection. SensatUrban = billion-scale annotated urban cloud.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">🗿</div>
+          <div class="mc-title">Cultural Heritage & Forensics</div>
+          <div class="mc-desc">Digital preservation of monuments, virtual restoration, damage assessment. 3D crime-scene reconstruction for court proceedings.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 13. FUTURE ========== -->
+    <section class="chapter" id="future">
+      <div class="chapter-header">
+        <span class="chapter-num">13</span>
+        <h2>Current Challenges & Future Directions</h2>
+      </div>
+
+      <h3>13.1 Open Challenges</h3>
+      <div class="grid">
+        <div class="mini-card"><div class="mc-title">Scalability</div><div class="mc-desc">City-scale clouds with billions of points — need hierarchical and streaming algorithms.</div></div>
+        <div class="mini-card"><div class="mc-title">Domain Adaptation</div><div class="mc-desc">Models fail when moved to new sensors / environments. Unsupervised DA still open.</div></div>
+        <div class="mini-card"><div class="mc-title">Annotation Efficiency</div><div class="mc-desc">Fully supervised still dominates. Bridging the gap to label-free is key.</div></div>
+        <div class="mini-card"><div class="mc-title">Robustness</div><div class="mc-desc">Vulnerable to adversarial attacks, sensor noise, weather degradation.</div></div>
+        <div class="mini-card"><div class="mc-title">Real-Time Inference</div><div class="mc-desc">SOTA models too slow for AV/robotics. Need efficient architectures + compression.</div></div>
+      </div>
+
+      <h3>13.2 Emerging Research Directions</h3>
+      <div class="grid">
+        <div class="mini-card"><div class="mc-title">3D Foundation Models</div><div class="mc-desc">Large pre-trained models like GPT/CLIP for 3D. SAM3D, UniSeg, Point-Bind are early steps.</div></div>
+        <div class="mini-card"><div class="mc-title">4D Perception</div><div class="mc-desc">Temporal modeling of dynamic 3D scenes — scene flow, spatio-temporal segmentation.</div></div>
+        <div class="mini-card"><div class="mc-title">Multi-Modal 3D</div><div class="mc-desc">Tighter integration of 3D with language, images, other modalities.</div></div>
+        <div class="mini-card"><div class="mc-title">Generative 3D</div><div class="mc-desc">Diffusion for 3D (Point-E, Shap-E, DreamFusion) — text-to-3D and image-to-3D.</div></div>
+        <div class="mini-card"><div class="mc-title">Embodied AI</div><div class="mc-desc">3D perception as the foundation for agents that plan and act in the physical world.</div></div>
+        <div class="mini-card"><div class="mc-title">Unified Representations</div><div class="mc-desc">Points + radiance fields + Gaussians + meshes into one framework. NeRF-GS exemplifies.</div></div>
+      </div>
+    </section>
+
+    <!-- ========== 14. REFERENCES ========== -->
+    <section class="chapter" id="references">
+      <div class="chapter-header">
+        <span class="chapter-num">14</span>
+        <h2>Key References</h2>
+      </div>
+
+      <h3>Foundational Architectures</h3>
+      <ul class="clean">
+        <li>C.R. Qi et al. <strong>PointNet</strong>: Deep Learning on Point Sets for 3D Classification and Segmentation. CVPR 2017.</li>
+        <li>C.R. Qi et al. <strong>PointNet++</strong>: Deep Hierarchical Feature Learning on Point Sets in a Metric Space. NeurIPS 2017.</li>
+        <li>Y. Wang et al. <strong>Dynamic Graph CNN (DGCNN)</strong> for Learning on Point Clouds. ACM TOG 2019.</li>
+        <li>H. Zhao et al. <strong>Point Transformer</strong>. ICCV 2021.</li>
+        <li>C. Choy et al. <strong>4D Spatio-Temporal ConvNets (MinkowskiNet)</strong>. CVPR 2019.</li>
+        <li>H. Thomas et al. <strong>KPConv</strong>: Flexible and Deformable Convolution for Point Clouds. ICCV 2019.</li>
+      </ul>
+
+      <h3>3D Segmentation</h3>
+      <ul class="clean">
+        <li>Q. Hu et al. <strong>RandLA-Net</strong>: Efficient Semantic Segmentation of Large-Scale Point Clouds. CVPR 2020.</li>
+        <li>H. Zhu et al. <strong>Cylindrical and Asymmetrical 3D Convolutions</strong> for LiDAR. CVPR 2021.</li>
+        <li>L. Jiang et al. <strong>PointGroup</strong>: Dual-Set Grouping for 3D Instance Seg. CVPR 2020.</li>
+        <li>J. Schult et al. <strong>Mask3D</strong>: Mask Transformer for 3D Instance Seg. ICRA 2023.</li>
+      </ul>
+
+      <h3>3D Object Detection</h3>
+      <ul class="clean">
+        <li>C.R. Qi et al. <strong>Deep Hough Voting (VoteNet)</strong>. ICCV 2019.</li>
+        <li>T. Yin et al. <strong>CenterPoint</strong>: Center-based 3D Detection and Tracking. CVPR 2021.</li>
+        <li>S. Shi et al. <strong>PV-RCNN</strong>: Point-Voxel Feature Set Abstraction. CVPR 2020.</li>
+      </ul>
+
+      <h3>Neural Radiance Fields & Gaussian Splatting</h3>
+      <ul class="clean">
+        <li>B. Mildenhall et al. <strong>NeRF</strong>: Representing Scenes as Neural Radiance Fields. ECCV 2020.</li>
+        <li>B. Kerbl et al. <strong>3D Gaussian Splatting</strong> for Real-Time Radiance Field Rendering. SIGGRAPH 2023.</li>
+        <li>T. Müller et al. <strong>Instant-NGP</strong>: Multiresolution Hash Encoding. SIGGRAPH 2022.</li>
+      </ul>
+
+      <h3>Self-Supervised & Pre-Training</h3>
+      <ul class="clean">
+        <li>Y. Pang et al. <strong>Point-MAE</strong>: Masked Autoencoders for Point Cloud Self-Supervised Learning. ECCV 2022.</li>
+        <li>X. Yu et al. <strong>Point-BERT</strong>: Pre-training 3D Transformers with Masked Point Modeling. CVPR 2022.</li>
+        <li>D. Rozenberszki et al. <strong>Language-Grounded Indoor 3D Semantic Segmentation (ScanNet200)</strong>. ECCV 2022.</li>
+      </ul>
+
+      <h3>Surveys</h3>
+      <ul class="clean">
+        <li>Y. Guo et al. <strong>Deep Learning for 3D Point Clouds: A Survey</strong>. IEEE TPAMI 2021.</li>
+        <li>Deep Learning for 3D Point Cloud Enhancement: A Survey. arXiv:2411.00857, 2024.</li>
+        <li>A Survey of Label-Efficient Deep Learning for 3D Point Clouds. IEEE TPAMI 2024.</li>
+        <li>NeRF: Neural Radiance Field in 3D Vision: A Comprehensive Review. arXiv:2210.00379, 2025.</li>
+      </ul>
+
+      <!-- AUTHOR -->
+      <div class="author-card">
+        <div class="author-avatar"></div>
+        <div>
+          <div class="author-name">Nirvana Fanaelahi</div>
+          <div class="author-role">AI Security Specialist · ML Engineer</div>
+          <p style="font-size: 13.5px; margin-bottom: 8px;">M.Sc. Computer Vision & Data Science at NHL Stenden University. Research focuses on cross-attention fusion architectures for complex image analysis — directly underpinning state-of-the-art 3D transformer models and fusion techniques in this guide.</p>
+          <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Designs secure, production-ready AI workflows, MLOps, and adversarial ML assessments. PyTorch · MLflow · AWS · FastAPI.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <div>© 2026 · 3D Machine Learning Technical Reference</div>
+      <div>Built with modern web standards · v2026.04</div>
+    </footer>
+  </main>
+</div>
+
+<script>
+  // Active link highlighting on scroll (scroll-spy)
+  const links = document.querySelectorAll('.nav-link');
+  const sections = Array.from(document.querySelectorAll('section.chapter'));
+
+  function setActive() {
+    const scrollY = window.scrollY + 120;
+    let current = sections[0]?.id;
+    for (const s of sections) {
+      if (s.offsetTop <= scrollY) current = s.id;
+    }
+    links.forEach(l => {
+      const href = l.getAttribute('href');
+      if (href && href === '#' + current && !l.classList.contains('nav-sub')) {
+        l.classList.add('active');
+      } else if (!l.classList.contains('nav-sub')) {
+        l.classList.remove('active');
+      }
+    });
+  }
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+
+  // Sidebar search filter
+  const searchInput = document.getElementById('searchInput');
+  searchInput?.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.nav-link').forEach(l => {
+      const text = l.textContent.toLowerCase();
+      l.style.display = !q || text.includes(q) ? '' : 'none';
+    });
+  });
+
+  // Smooth click-close on mobile
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.addEventListener('click', () => {
+      document.querySelector('.sidebar')?.classList.remove('open');
+    });
+  });
+</script>
+
+</body>
+</html>
