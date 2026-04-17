@@ -20,7 +20,9 @@ This repository contains an interactive web-based version of the 3D Machine Lear
 
 ## Preview
 
-Open `3d-ml-reference.html` in any modern browser to explore the interactive reference.
+**Live site:** [3d-machine-learning-point-cloud-deep.netlify.app](https://3d-machine-learning-point-cloud-deep.netlify.app/)
+
+Or open `3d-ml-reference.html` in any modern browser to explore the interactive reference locally.
 
 ## Features
 
